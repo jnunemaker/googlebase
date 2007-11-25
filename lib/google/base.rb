@@ -14,7 +14,10 @@ module Google
   class Base
     class << self
       # Given an email and password it creates a new connection 
-      # which will be used for this class and all sub classes
+      # which will be used for this class and all sub classes.
+      #
+      # Raises Google::LoginError if login fails or if, god forbid,
+      # google is having issues.
       def establish_connection(email, password)
         @@connection = new(email, password)
       end
@@ -24,26 +27,76 @@ module Google
         @@connection
       end
       
-      # Changes the current connection to the one provided
+      # Changes the current connection to the one provided.
+      # If in an app you store the connection in a session, 
+      # you can reuse it instead of establishing a new connection
+      # with each request. 
+      #
+      # Usage: 
+      #   Google::Base.connection = session[:connection] # => or whatever
       def connection=(new_connection)
         @@connection = new_connection
       end
       
       # Makes a get request to a google service using 
       # the session id from the connection's session
-      def get(url)
-        request 'get', url
+      # 
+      # Usage:
+      #   get('http://google.com/some/thing')
+      #   get('http://google.com/some/thing', :query_hash => {:q => 'test', :second => 'another'})
+      #     # makes request to http://google.com/some/thing?q=test&second=another
+      #   get('http://google.com/some/thing?ha=poo', :query_hash => {:q => 'test', :second => 'another'}, :qsi => '&')
+      #     # makes request to http://google.com/some/thing?ha=poo&q=test&second=another
+      def get(url, o={})
+        options = {
+          :query_hash => nil,
+          :qsi => '?'
+        }.merge(o)
+        request 'get', url, options
+      end
+      
+      # Makes a post request to a google service using
+      # the session id from the connection's session
+      #
+      # Usage:
+      #   post('http://google.com/some/thing', :form_data => {:one => '1', :two => '2'})
+      #     # makes a post request to http://google.com/some/thing with the form data set to one=1&two=2
+      def post(url, o={})
+        options = {
+          :form_data => nil,
+        }.merge(o)
+        request 'post', url, options
       end
       
       private
-        # This will eventually implement get and post 
-        # but I haven't needed post yet
-        def request(method, url)
-          url    = URI.parse(url)
-          req    = Net::HTTP::Get.new(url.request_uri, @@connection.headers)
+        def request(method, url, o={})
+          options = {
+            :form_data  => nil, 
+            :query_hash => nil,
+            :qsi        => '?'
+          }.merge(o)
+          
+          url += hash_to_query_string(options[:query_hash], options[:qsi]) unless options[:query_hash].nil?
+          url  = URI.parse(url)
+          req  = if method == 'post'
+            Net::HTTP::Post.new(url.request_uri, @@connection.headers)
+          else
+            Net::HTTP::Get.new(url.request_uri, @@connection.headers)
+          end
+          req.set_form_data(options[:form_data]) if options[:form_data]
+          
           http   = Net::HTTP.new(url.host, url.port)
           result = http.start() { |conn| conn.request(req) }
     			result.body
+        end
+        
+        # Converts a hash to a query string
+        #
+        # Usage:
+        #   hash_to_query_string({:q => 'test', :num => 5}) # => '?q=test&num=5&'        
+        #   hash_to_query_string({:q => 'test', :num => 5}, '&') # => '&q=test&num=5&'
+        def hash_to_query_string(hash, initial_value="?")
+          hash.inject(initial_value) { |qs, h| qs += "#{h[0]}=#{h[1]}&"; qs }
         end
     end
     

@@ -1,1 +1,4 @@
+* 0.1.1 - added post request method
+				- refactored get to take a hash which will automatically be converted to a query string
+				- added in a bit more documentation for methods including the new post method
 * 0.1.0 - initial release
