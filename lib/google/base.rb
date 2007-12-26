@@ -60,12 +60,22 @@ module Google
       #
       # Usage:
       #   post('http://google.com/some/thing', :form_data => {:one => '1', :two => '2'})
-      #     # makes a post request to http://google.com/some/thing with the form data set to one=1&two=2
+      #     # makes a post request to http://google.com/some/thing with the post data set to one=1&two=2
+      #   post('http://google.com/some/thing', :raw_data => "some=thing&another=thing")
+      #     # makes a post request to http://google.com/some/thing with the post data set to some=thing&another=thing
       def post(url, o={})
         options = {
           :form_data => nil,
+          :raw_data => nil,
         }.merge(o)
-        request 'post', url, options
+        if options[:raw_data]
+          url    = URI.parse(url)
+          http   = Net::HTTP.new(url.host, url.port)
+          result = http.request_post(url.request_uri, options[:raw_data], @@connection.headers)
+          result.body
+        else
+          request 'post', url, options
+        end
       end
       
       private
