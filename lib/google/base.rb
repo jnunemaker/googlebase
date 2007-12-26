@@ -69,7 +69,7 @@ module Google
           :raw_data => nil,
         }.merge(o)
         if options[:raw_data]
-          url    = URI.parse(url)
+          url    = URI.parse(URI.escape(url))
           http   = Net::HTTP.new(url.host, url.port)
           result = http.request_post(url.request_uri, options[:raw_data], @@connection.headers)
           result.body
@@ -87,7 +87,7 @@ module Google
           }.merge(o)
           
           url += hash_to_query_string(options[:query_hash], options[:qsi]) unless options[:query_hash].nil?
-          url  = URI.parse(url)
+          url  = URI.parse(URI.escape(url))
           req  = if method == 'post'
             Net::HTTP::Post.new(url.request_uri, @@connection.headers)
           else
