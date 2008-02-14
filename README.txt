@@ -13,6 +13,7 @@ The code below shows how to use the gem by itself. It checks if username and pas
 	require 'google/base'
 	Google::Base.establish_connection('username', 'password')
 	Google::Base.get('http://google.com/reader/path/to/whatever/')
+	Google::Base.get('https://google.com:443/analytics/home/') # to make an ssl request
 
 ===Inheritance
 
