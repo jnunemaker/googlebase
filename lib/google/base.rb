@@ -96,6 +96,7 @@ module Google
       url = URI.parse(LOGIN_URL)
       req = Net::HTTP::Post.new(url.request_uri)
       req.set_form_data({
+	'accountType' => 'HOSTED_OR_GOOGLE',
         'Email'    => @email, 
         'Passwd'   => @password, 
         'source'   => SOURCE, 
