@@ -3,7 +3,7 @@ Google Base Class is a base for authenticating to google and making requests to 
 =Installation
 
 in your Gemfile
-gem 'googlebase', :require => "google/base", :git => "git@github.com:jotto/googlebase.git"
+gem 'googlebase', :require => "google/base", :git => "https://github.com/jotto/googlebase.git"
 
 =Usage
 
