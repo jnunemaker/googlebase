@@ -17,8 +17,8 @@ module Google
     #
     # Raises Google::LoginError if login fails or if, god forbid,
     # google is having issues.
-    def self.establish_connection(email, password)
-      @@connection = new(email, password)
+    def self.establish_connection(email, password,service="")
+      @@connection = new(email, password,service)
     end
     
     # Returns the current connection
@@ -83,8 +83,8 @@ module Google
     
     # Creates a new instance of the connection class using 
     # the given email and password and attempts to login
-    def initialize(email, password)
-      @email, @password = email, password
+    def initialize(email, password ,service)
+      @email, @password, @service = email, password, service
       login
     end
     
@@ -101,11 +101,13 @@ module Google
         'Passwd'   => @password, 
         'source'   => SOURCE, 
         'continue' => URL,
+        'service'  => @service,
       })
       http         = Net::HTTP.new(url.host, url.port)
 			http.use_ssl = true
 			result       = http.start() { |conn| conn.request(req) }
 			@sid         = extract_sid(result.body)
+			@auth        = extract_auth(result.body)
 			raise LoginError, "Most likely your username and password are wrong." unless logged_in?
     end
     
@@ -116,7 +118,7 @@ module Google
     
     # Outputs the headers that are needed to make an authenticated request
     def headers
-      {'Cookie' => "Name=#{@sid};SID=#{@sid};Domain=.google.com;Path=/;Expires=160000000000"}
+      {'Authorization' => "GoogleLogin auth=#{@auth}"}
     end
     
     private
@@ -154,6 +156,11 @@ module Google
       def extract_sid(body)
         matches = body.match(/SID=(.*)/)
         matches.nil? ? nil : matches[0].gsub('SID=', '')
+      end
+
+      def extract_auth(body)
+        matches = body.match(/Auth=(.*)/)
+        matches.nil? ? nil : matches[0].gsub('Auth=', '')
       end
   end
 end
