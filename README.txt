@@ -1,3 +1,5 @@
+DEAD AND UNMAINTAINED
+
 Google Base Class is a base for authenticating to google and making requests to google services.
 
 =Installation
